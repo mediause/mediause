@@ -67,6 +67,7 @@ This enables loading/unloading multiple site runtimes for query, publish, and do
 
 Core command surface now maps to:
 
+- sites
 - auth
 - use
 - manage

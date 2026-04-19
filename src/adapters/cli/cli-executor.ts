@@ -7,6 +7,8 @@ export type CoreCommand =
   | ["help", string]
   | ["version"]
   | ["close"]
+  | ["sites", "list"]
+  | ["sites", "add", string]
   | ["auth", "login", string]
   | ["auth", "list"]
   | ["auth", "health"]
@@ -60,6 +62,14 @@ export class CliExecutor {
 
   async authLogout(alias: string, payload?: Record<string, unknown>): Promise<unknown> {
     return this.transport.execute(["auth", "logout", alias], payload);
+  }
+
+  async sitesList(payload?: Record<string, unknown>): Promise<unknown> {
+    return this.transport.execute(["sites", "list"], payload);
+  }
+
+  async sitesAdd(site: string, payload?: Record<string, unknown>): Promise<unknown> {
+    return this.transport.execute(["sites", "add", site], payload);
   }
 
   async manageKeySet(key: string): Promise<unknown> {

@@ -198,6 +198,8 @@ const sdk = mediause("mu-YOUR_API_KEY", {
 
 const cli = await sdk.createCliExecutor();
 
+await cli.sitesList();
+await cli.sitesAdd("xiaohongshu"); // reserved no-op in current CLI
 await cli.executeCore(["auth", "list"]);
 await cli.executeSite({
 	mode: "active-context",
@@ -261,7 +263,7 @@ The SDK is aligned with the latest CLI boundary model in `docs/CLI_COMMAND_TREE.
 
 The CLI adapter supports both command families:
 
-- Core: `auth`, `use`, `manage`, `trace`, `task`, `rpc`, plus `help/version/close`
+- Core: `sites`, `auth`, `use`, `manage`, `trace`, `task`, `rpc`, plus `help/version/close`
 - Site dynamic invocation modes:
 	- `mediause <site> <capability> <action> [args]`
 	- `mediause <capability> <action> [args]` (site from active context)

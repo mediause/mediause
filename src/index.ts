@@ -23,7 +23,12 @@ export { AccountManager } from "./accounts/account-manager.js";
 export { WorkflowManager } from "./workflow/workflow-manager.js";
 
 export { CliExecutor } from "./adapters/cli/cli-executor.js";
-export type { CliTransport } from "./adapters/cli/cli-executor.js";
+export type {
+  CliTransport,
+  CoreCommand,
+  SiteDynamicCommand,
+  SiteInvocationMode,
+} from "./adapters/cli/cli-executor.js";
 export { LocalCliTransport } from "./adapters/cli/local-cli-transport.js";
 export type { LocalCliTransportOptions } from "./adapters/cli/local-cli-transport.js";
 export {
