@@ -4,6 +4,11 @@ import {
   type CliBinaryInfo,
   type CliBootstrapOptions,
 } from "../adapters/cli/bootstrap.js";
+import {
+  DEFAULT_CLI_LATEST_URL,
+  DEFAULT_CLI_MANIFEST_BASE_URL,
+  resolveDefaultExpectedCliVersion,
+} from "../adapters/cli/defaults.js";
 import { CliExecutor } from "../adapters/cli/cli-executor.js";
 import {
   LocalCliTransport,
@@ -65,7 +70,20 @@ export class MediaUseToolkit {
     this.workflows = new WorkflowManager(this.orchestrator);
 
     if (options.cli) {
-      this.cliBootstrap = new CliBootstrapManager(options.cli);
+      const envVersion = options.cli.expectedVersion?.trim();
+      const defaultExpectedVersion =
+        envVersion && envVersion.length > 0
+          ? envVersion
+          : resolveDefaultExpectedCliVersion();
+
+      this.cliBootstrap = new CliBootstrapManager({
+        ...options.cli,
+        expectedVersion: defaultExpectedVersion,
+        manifestUrl:
+          options.cli.manifestUrl?.trim() || DEFAULT_CLI_MANIFEST_BASE_URL,
+        latestVersionUrl:
+          options.cli.latestVersionUrl?.trim() || DEFAULT_CLI_LATEST_URL,
+      });
     }
 
     this.cliTransportOptions = options.cliTransport;

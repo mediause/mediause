@@ -18,6 +18,7 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
+    "test:e2e": "vitest run tests/e2e",
     "test:watch": "vitest",
     "clean": "powershell -NoProfile -Command \"if (Test-Path dist) { Remove-Item -Recurse -Force dist }\""
   },

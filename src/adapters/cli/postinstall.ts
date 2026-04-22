@@ -1,6 +1,11 @@
 #!/usr/bin/env node
 
 import { CliBootstrapManager } from "./bootstrap.js";
+import {
+  DEFAULT_CLI_LATEST_URL,
+  DEFAULT_CLI_MANIFEST_BASE_URL,
+  resolveDefaultExpectedCliVersion,
+} from "./defaults.js";
 
 function isTruthy(value: string | undefined): boolean {
   if (!value) {
@@ -17,16 +22,24 @@ export async function runPostinstall(): Promise<void> {
     return;
   }
 
-  const expectedVersion = process.env.MEDIAUSE_CLI_VERSION?.trim();
-  const manifestUrl = process.env.MEDIAUSE_CLI_MANIFEST_URL?.trim() || "https://releases.mediause.dev/cli";
-  const latestVersionUrl = process.env.MEDIAUSE_CLI_LATEST_VERSION_URL?.trim();
+  const expectedVersionFromEnv = process.env.MEDIAUSE_CLI_VERSION?.trim();
+  const expectedVersion =
+    expectedVersionFromEnv && expectedVersionFromEnv.length > 0
+      ? expectedVersionFromEnv
+      : resolveDefaultExpectedCliVersion();
+  const manifestUrl =
+    process.env.MEDIAUSE_CLI_MANIFEST_URL?.trim() ||
+    DEFAULT_CLI_MANIFEST_BASE_URL;
+  const latestVersionUrl =
+    process.env.MEDIAUSE_CLI_LATEST_VERSION_URL?.trim() ||
+    DEFAULT_CLI_LATEST_URL;
   const cacheDir = process.env.MEDIAUSE_CLI_CACHE_DIR?.trim();
   const binaryName = process.env.MEDIAUSE_CLI_BINARY_NAME?.trim();
 
   const manager = new CliBootstrapManager({
-    expectedVersion: expectedVersion && expectedVersion.length > 0 ? expectedVersion : undefined,
+    expectedVersion,
     manifestUrl,
-    latestVersionUrl: latestVersionUrl && latestVersionUrl.length > 0 ? latestVersionUrl : undefined,
+    latestVersionUrl,
     cacheDir: cacheDir && cacheDir.length > 0 ? cacheDir : undefined,
     binaryName: binaryName && binaryName.length > 0 ? binaryName : undefined,
     autoInstall: true,
