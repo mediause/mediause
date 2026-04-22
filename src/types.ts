@@ -25,7 +25,7 @@ export type TaskPriority = "low" | "normal" | "high";
 export type ExecutionTask = {
   id: string;
   platform: Platform;
-  action: "post" | "get" | "search" | "engage" | "reply" | "custom";
+  action: string;
   payload: Record<string, unknown>;
   priority?: TaskPriority;
   maxRetries?: number;

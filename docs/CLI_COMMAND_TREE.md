@@ -21,6 +21,10 @@ mediause
 - help [site] [capability] [--json]
 - close [--json]
 - version [--json]
+- sites
+  - list [--json]
+  - add <site> [--json]
+    - note: currently a no-op reserved command
 - auth
   - login <platform> [--json]
   - list [--json]
@@ -82,11 +86,13 @@ Example rejected style:
 
 - mediause.auth.login
 - mediause.use.account
+- mediause.sites.list
 
 Use explicit core style instead:
 
 - mediause auth login <site>
 - mediause use account <platform:account>
+- mediause sites list
 
 ## Routing Boundary
 
