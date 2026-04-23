@@ -7,7 +7,7 @@ These skills are designed to be compatible with:
 - Claude Code
 - Codex
 - OpenClaw
-- Curor
+- Cursor
 
 ## Source of Truth
 
