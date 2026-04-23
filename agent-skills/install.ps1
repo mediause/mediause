@@ -259,7 +259,6 @@ try {
   Write-Host "Installed: $targetFile"
   Write-Host "Version: $version"
   Write-Host "Run in current shell: $BinaryName --version"
-  Write-Host "If you started this script via a new powershell process, run in your parent shell instead: .\\agent-skills\\install.ps1"
   exit 0
 } catch {
   $errorMessage = "Unknown installer error."
