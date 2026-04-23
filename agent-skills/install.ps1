@@ -162,6 +162,48 @@ function Get-PathSegmentsLower {
     ForEach-Object { $_.TrimEnd("\\").ToLowerInvariant() })
 }
 
+function Download-FileWithCacheBust {
+  param(
+    [string]$DownloadUrl,
+    [string]$OutputPath,
+    [string]$ExpectedSha256
+  )
+
+  $headers = @{
+    "Cache-Control" = "no-cache"
+    "Pragma" = "no-cache"
+  }
+
+  for ($attempt = 1; $attempt -le 2; $attempt++) {
+    $requestUrl = $DownloadUrl
+    if ($attempt -gt 1) {
+      $separator = "?"
+      if ($requestUrl.Contains("?")) {
+        $separator = "&"
+      }
+      $requestUrl = "{0}{1}cb={2}" -f $requestUrl, $separator, ([Guid]::NewGuid().ToString("N"))
+      Write-Host "Retrying download with cache-busting URL: $requestUrl"
+    }
+
+    Invoke-WebRequest -UseBasicParsing -Headers $headers -Uri $requestUrl -OutFile $OutputPath
+
+    if ([string]::IsNullOrWhiteSpace($ExpectedSha256)) {
+      return
+    }
+
+    $actualHash = (Get-FileHash -Path $OutputPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    if ($actualHash -eq $ExpectedSha256) {
+      return
+    }
+
+    if ($attempt -eq 2) {
+      throw "SHA256 mismatch. expected=$ExpectedSha256 actual=$actualHash"
+    }
+
+    Write-Host "Checksum mismatch on downloaded file, retrying once to bypass CDN cache."
+  }
+}
+
 try {
   $resolvedLatestUrl = if ([string]::IsNullOrWhiteSpace($LatestUrl)) {
     "{0}/latest.json" -f $ManifestBaseUrl.TrimEnd("/")
@@ -204,7 +246,7 @@ try {
 
   if ($shouldDownload) {
     Write-Host "Downloading CLI v$version from: $downloadUrl"
-    Invoke-WebRequest -Uri $downloadUrl -OutFile $tmpFile
+    Download-FileWithCacheBust -DownloadUrl $downloadUrl -OutputPath $tmpFile -ExpectedSha256 $sha256
 
     if (-not [string]::IsNullOrWhiteSpace($sha256)) {
       $actualHash = (Get-FileHash -Path $tmpFile -Algorithm SHA256).Hash.ToLowerInvariant()
@@ -271,20 +313,11 @@ try {
     } elseif (-not [string]::IsNullOrWhiteSpace([string]$_)) {
       $errorMessage = [string]$_
     }
-
-    $errorRecordText = ($_ | Format-List * -Force | Out-String).Trim()
-    if (-not [string]::IsNullOrWhiteSpace($_.ScriptStackTrace)) {
-      $scriptStack = $_.ScriptStackTrace.Trim()
-    }
   }
 
   [Console]::Error.WriteLine("[mediause-installer] $errorMessage")
   if (-not [string]::IsNullOrWhiteSpace($errorRecordText)) {
     [Console]::Error.WriteLine($errorRecordText)
-  }
-  if (-not [string]::IsNullOrWhiteSpace($scriptStack)) {
-    [Console]::Error.WriteLine("ScriptStackTrace:")
-    [Console]::Error.WriteLine($scriptStack)
   }
 
   exit 1
