@@ -9,15 +9,24 @@ param(
 $ErrorActionPreference = "Stop"
 
 function Get-PlatformKey {
-  $isWindows = [System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform(
+  $isWindowsPlatform = [System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform(
     [System.Runtime.InteropServices.OSPlatform]::Windows
   )
 
-  if (-not $isWindows) {
+  if (-not $isWindowsPlatform) {
     throw "This installer only supports Windows."
   }
 
-  $arch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString().ToLowerInvariant()
+  $archRaw = [string][System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture
+  if ([string]::IsNullOrWhiteSpace($archRaw)) {
+    $archRaw = [string]$env:PROCESSOR_ARCHITECTURE
+  }
+
+  if ([string]::IsNullOrWhiteSpace($archRaw)) {
+    throw "Unable to determine Windows architecture."
+  }
+
+  $arch = $archRaw.Trim().ToLowerInvariant()
   switch ($arch) {
     "arm64" { return "windows-arm64" }
     default { return "windows-x64" }
@@ -140,6 +149,19 @@ function Resolve-AssetForPlatform {
   return $asset
 }
 
+function Get-PathSegmentsLower {
+  param([string]$PathValue)
+
+  if ([string]::IsNullOrWhiteSpace($PathValue)) {
+    return @()
+  }
+
+  return ($PathValue -split ";" |
+    ForEach-Object { $_.Trim() } |
+    Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
+    ForEach-Object { $_.TrimEnd("\\").ToLowerInvariant() })
+}
+
 try {
   $resolvedLatestUrl = if ([string]::IsNullOrWhiteSpace($LatestUrl)) {
     "{0}/latest.json" -f $ManifestBaseUrl.TrimEnd("/")
@@ -202,10 +224,11 @@ try {
     $userPath = ""
   }
 
-  $segments = $userPath.Split(";", [System.StringSplitOptions]::RemoveEmptyEntries)
+  $segments = Get-PathSegmentsLower -PathValue $userPath
+  $installDirNormalized = $InstallDir.TrimEnd("\\").ToLowerInvariant()
   $alreadyInPath = $false
   foreach ($segment in $segments) {
-    if ($segment.TrimEnd("\\").ToLowerInvariant() -eq $InstallDir.TrimEnd("\\").ToLowerInvariant()) {
+    if ($segment -eq $installDirNormalized) {
       $alreadyInPath = $true
       break
     }
@@ -218,7 +241,7 @@ try {
 
     if ([string]::IsNullOrWhiteSpace($env:Path)) {
       $env:Path = $InstallDir
-    } elseif (-not (($env:Path.Split(";", [System.StringSplitOptions]::RemoveEmptyEntries) | ForEach-Object { $_.TrimEnd("\\").ToLowerInvariant() }) -contains $InstallDir.TrimEnd("\\").ToLowerInvariant())) {
+    } elseif (-not ((Get-PathSegmentsLower -PathValue $env:Path) -contains $installDirNormalized)) {
       $env:Path = "$env:Path;$InstallDir"
     }
 
@@ -227,7 +250,7 @@ try {
     if ([string]::IsNullOrWhiteSpace($env:Path)) {
       $env:Path = $InstallDir
       Write-Host "Updated current shell PATH with: $InstallDir"
-    } elseif (-not (($env:Path.Split(";", [System.StringSplitOptions]::RemoveEmptyEntries) | ForEach-Object { $_.TrimEnd("\\").ToLowerInvariant() }) -contains $InstallDir.TrimEnd("\\").ToLowerInvariant())) {
+    } elseif (-not ((Get-PathSegmentsLower -PathValue $env:Path) -contains $installDirNormalized)) {
       $env:Path = "$env:Path;$InstallDir"
       Write-Host "Updated current shell PATH with: $InstallDir"
     }
@@ -239,6 +262,31 @@ try {
   Write-Host "If you started this script via a new powershell process, run in your parent shell instead: .\\agent-skills\\install.ps1"
   exit 0
 } catch {
-  Write-Error $_
+  $errorMessage = "Unknown installer error."
+  $errorRecordText = ""
+  $scriptStack = ""
+
+  if ($null -ne $_) {
+    if ($null -ne $_.Exception -and -not [string]::IsNullOrWhiteSpace($_.Exception.Message)) {
+      $errorMessage = $_.Exception.Message
+    } elseif (-not [string]::IsNullOrWhiteSpace([string]$_)) {
+      $errorMessage = [string]$_
+    }
+
+    $errorRecordText = ($_ | Format-List * -Force | Out-String).Trim()
+    if (-not [string]::IsNullOrWhiteSpace($_.ScriptStackTrace)) {
+      $scriptStack = $_.ScriptStackTrace.Trim()
+    }
+  }
+
+  [Console]::Error.WriteLine("[mediause-installer] $errorMessage")
+  if (-not [string]::IsNullOrWhiteSpace($errorRecordText)) {
+    [Console]::Error.WriteLine($errorRecordText)
+  }
+  if (-not [string]::IsNullOrWhiteSpace($scriptStack)) {
+    [Console]::Error.WriteLine("ScriptStackTrace:")
+    [Console]::Error.WriteLine($scriptStack)
+  }
+
   exit 1
 }
