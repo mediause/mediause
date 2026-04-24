@@ -47,6 +47,8 @@ type ManageCoreCommand =
   | ["manage", "context", JsonFlag]
   | ["manage", "context", "--show"]
   | ["manage", "context", "--show", JsonFlag]
+  | ["manage", "context", "--open"]
+  | ["manage", "context", "--open", JsonFlag]
   | ["manage", "context", "--close"]
   | ["manage", "context", "--close", JsonFlag]
   | ["manage", "context", "--clear"]
@@ -155,6 +157,7 @@ export class CliExecutor {
 
   async manageContext(options?: {
     show?: boolean;
+    open?: boolean;
     close?: boolean;
     clear?: boolean;
     json?: boolean;
@@ -162,6 +165,8 @@ export class CliExecutor {
     const command: string[] = ["manage", "context"];
     if (options?.show) {
       command.push("--show");
+    } else if (options?.open) {
+      command.push("--open");
     } else if (options?.close) {
       command.push("--close");
     } else if (options?.clear) {

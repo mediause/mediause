@@ -140,6 +140,11 @@ MediaUse 使用 Core + Sites 命令模型：
 - mediause.<capability>.<action> [args]
 - mediause.<site>.<capability>.<action> [args]
 
+Core 命令补充：
+
+- 支持 `auth login <platform[/entry]>`，用于同站点多登录体系（例如：`mediause auth login xiaohongshu/creator`）。
+- `manage context --open` 用于打开/聚焦当前 context webview；`manage context --close` 会关闭当前 webview session。
+
 ## 客户场景
 
 - 用一套 SDK 统一管理多站点媒体运营自动化

@@ -140,6 +140,11 @@ Dynamic invocation forms:
 - mediause.<capability>.<action> [args]
 - mediause.<site>.<capability>.<action> [args]
 
+Core command notes:
+
+- `auth login <platform[/entry]>` is supported for multi-login systems on one site (example: `mediause auth login xiaohongshu/creator`).
+- `manage context --open` opens/focuses current context webview; `manage context --close` closes current webview session.
+
 ## Customer-Facing Scenarios
 
 - manage and automate multi-site media operations from one SDK

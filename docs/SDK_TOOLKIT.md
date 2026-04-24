@@ -76,6 +76,11 @@ Core command surface now maps to:
 - rpc
 - help/version/close
 
+Notable core command details:
+
+- `auth login` accepts `<platform[/entry]>` (for example `xiaohongshu/creator`) so one site can expose multiple login systems from plugin config.
+- `manage context --open` opens/focuses the current webview session; `manage context --close` closes the current session window.
+
 Site capability actions are not static core verbs anymore.
 They are routed through dynamic site command parsing with four invocation modes:
 
