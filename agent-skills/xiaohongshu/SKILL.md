@@ -135,7 +135,8 @@ Source schema:
 
 ### 4.1 post.*
 
-- `mediause xiaohongshu post feed [--title <text>] [--text <text>] [--media <paths>] --json`
+- `post feed` uses only one media argument: `--media`, which covers both image and video file paths.
+- `mediause xiaohongshu post feed [--title <text>] [--text <text>] [--media <paths>] [--cover <cover_path>] --json`
 - `mediause xiaohongshu post repost --id <post_id> [--text <text>] --json`
 
 ### 4.2 get.*
@@ -250,7 +251,25 @@ If a limit is hit:
 mediause use account xiaohongshu:main --json
 mediause auth health --json
 mediause xiaohongshu search hot --json
-mediause xiaohongshu post feed --text "<draft_text>" --media c:/tmp/a.png --json
+mediause xiaohongshu post feed --title "今日推荐" --text "<draft_text>" --media c:/tmp/a.png,c:/tmp/b.png --json
+mediause trace last --json
+```
+
+### 6.1.1 Video publish with cover
+
+```powershell
+mediause use account xiaohongshu:main --json
+mediause auth health --json
+mediause xiaohongshu post feed --title "2026穿搭" --text "今日分享" --media c:/tmp/a.mp4 --cover c:/tmp/cover.png --json
+mediause trace last --json
+```
+
+### 6.1.2 Long article publish
+
+```powershell
+mediause use account xiaohongshu:main --json
+mediause auth health --json
+mediause xiaohongshu post feed --title "2026穿搭" --text "今日分享" --json
 mediause trace last --json
 ```
 
@@ -326,7 +345,7 @@ mediause auth health --json
 mediause xiaohongshu search hot --json
 
 # write action
-mediause xiaohongshu post feed --text "hello" --json
+mediause xiaohongshu post feed --title "hello" --text "hello" --json
 
 # trace
 mediause trace last --json
