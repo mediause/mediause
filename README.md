@@ -64,15 +64,10 @@ npm install
 ```ts
 import { mediause } from "@mediause/core";
 
-const sdk = mediause("mu-YOUR_API_KEY", {
-  cli: {
-    manifestUrl: "https://releases.mediause.dev/cli",
-    autoInstall: true,
-  },
-});
+const sdk = mediause("mu-YOUR_API_KEY");
 
-await sdk.auth.list();
 await sdk.auth.login("weibo");
+await sdk.use.account("weibo:main");
 
 await sdk.site("weibo").post.feed({
   title: "Hello from MediaUse",
