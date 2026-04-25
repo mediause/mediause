@@ -36,7 +36,15 @@ type AuthCoreCommand =
 
 type UseCoreCommand =
   | ["use", "account", string]
-  | ["use", "account", string, JsonFlag];
+  | ["use", "account", string, "--policy", string]
+  | ["use", "account", string, "--idle-timeout-seconds", string]
+  | ["use", "account", string, "--policy", string, "--idle-timeout-seconds", string]
+  | ["use", "account", string, "--idle-timeout-seconds", string, "--policy", string]
+  | ["use", "account", string, JsonFlag]
+  | ["use", "account", string, "--policy", string, JsonFlag]
+  | ["use", "account", string, "--idle-timeout-seconds", string, JsonFlag]
+  | ["use", "account", string, "--policy", string, "--idle-timeout-seconds", string, JsonFlag]
+  | ["use", "account", string, "--idle-timeout-seconds", string, "--policy", string, JsonFlag];
 
 type ManageCoreCommand =
   | ["manage", "task"]
@@ -105,8 +113,26 @@ export class CliExecutor {
     return this.transport.execute(["auth", "login", platform], payload);
   }
 
-  async useAccount(target: string, payload?: Record<string, unknown>): Promise<unknown> {
-    return this.transport.execute(["use", "account", target], payload);
+  async useAccount(
+    target: string,
+    options?: {
+      policy?: string;
+      idleTimeoutSeconds?: number;
+      json?: boolean;
+    },
+    payload?: Record<string, unknown>,
+  ): Promise<unknown> {
+    const command: string[] = ["use", "account", target];
+    if (options?.policy) {
+      command.push("--policy", options.policy);
+    }
+    if (options?.idleTimeoutSeconds !== undefined) {
+      command.push("--idle-timeout-seconds", String(options.idleTimeoutSeconds));
+    }
+    if (options?.json) {
+      command.push("--json");
+    }
+    return this.transport.execute(command, payload);
   }
 
   async authList(payload?: Record<string, unknown>): Promise<unknown> {
@@ -204,6 +230,10 @@ export class CliExecutor {
 
   async taskTrace(taskId: string): Promise<unknown> {
     return this.transport.execute(["task", "trace", "--task-id", taskId]);
+  }
+
+  async traceLast(): Promise<unknown> {
+    return this.transport.execute(["trace", "last"]);
   }
 
   private buildSiteCommand(command: SiteDynamicCommand): string[] {

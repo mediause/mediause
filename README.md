@@ -20,6 +20,15 @@ Unlike tools focused only on social media, MediaUse is designed for broad Web me
 
 These capabilities are delivered through site plugins.
 
+## Why MediaUse
+
+- Fast native Rust CLI, not a Node.js wrapper, startup in milliseconds
+- Works with any AI agent (Cursor, Claude Code, Codex, Continue, Windsurf, and more)
+- Chrome/Chromium automation via CDP, with no Playwright or Puppeteer dependency
+- Supports OAuth, webhooks, bridge mode, and automation mode
+- Sessions, authentication vault, and state persistence built in
+- Supports native Web APIs
+
 ## MediaUse CLI and SDK
 
 MediaUse CLI is the canonical execution layer.
@@ -62,21 +71,116 @@ const sdk = mediause("mu-YOUR_API_KEY", {
   },
 });
 
-const cli = await sdk.createCliExecutor();
+await sdk.auth.list();
+await sdk.auth.login("weibo");
 
-await cli.sitesList();
-await cli.executeCore(["auth", "list"]);
-await cli.executeSite({
-  mode: "active-context",
-  capability: "content",
-  action: "publish",
-  args: ["--text", "Hello from MediaUse"],
+await sdk.site("weibo").post.feed({
+  title: "Hello from MediaUse",
+  content: "Simple SDK flow",
+  media: ["./cover.jpg"],
 });
+```
+
+## Simple SDK API
+
+The SDK provides a direct and readable command style:
+
+```ts
+import { mediause } from "@mediause/core";
+
+const sdk = mediause("mu-YOUR_API_KEY");
+
+await sdk.auth.list();
+await sdk.auth.login("weibo");
+
+await sdk.site("weibo").post.feed({
+  title: "Title",
+  content: "Body",
+  media: ["./a.jpg", "./b.jpg"],
+  draft: true,
+});
+```
+
+All CLI-facing operations can be executed in chain style:
+
+```ts
+await sdk.auth.list();
+await sdk.auth.login("weibo");
+
+await sdk.registry.list({ json: true });
+await sdk.registry.add("weibo", { json: true });
+
+await sdk.use.account("weibo:main", {
+  policy: "balanced",
+  idleTimeoutSeconds: 120,
+  json: true,
+});
+
+await sdk.manage.context.open(true);
+await sdk.manage.key.get();
+await sdk.manage.key.set("mu-NEW_KEY");
+await sdk.manage.task({ id: "task-id", json: true });
+await sdk.task.status("task-id");
+await sdk.trace.last();
+
+await sdk.help.root(true);
+await sdk.version.get(true);
+await sdk.close.run(true);
+```
+
+For dynamic site commands:
+
+- `sdk.site("<site>").<capability>.<action>(input, payload?)`
+- `sdk.site().<capability>.<action>(input, payload?)` (active context)
+- `sdk.flow("<site>", "<account>").<capability>.<action>(input, payload?)` (flow-scoped shorthand)
+
+`input` supports object, string array, or primitive values.
+Object input is converted to CLI args with deterministic rules:
+
+- camelCase keys become kebab-case flags
+- array values become repeated flags
+- `true` becomes a flag-only switch
+- `false`, `null`, and `undefined` are omitted
+
+## Flow Constraints (Skill-Aligned)
+
+For workflows such as Xiaohongshu, the recommended order is:
+
+1. discover site commands
+2. bind account context (`use account`)
+3. run auth health
+4. execute dynamic site actions
+
+You can enforce this order with the built-in flow chain:
+
+```ts
+const flow = sdk.flow("xiaohongshu", "main");
+
+await flow.discover();
+await flow.useAccount({ policy: "balanced" });
+await flow.authHealth();
+
+await flow.search.hot();
+await flow.post.feed({
+  title: "今日推荐",
+  text: "草稿内容",
+  media: ["c:/tmp/a.png"],
+});
+
+await sdk.trace.last();
+```
+
+Or one-shot preparation:
+
+```ts
+const flow = sdk.flow("xiaohongshu", "main");
+await flow.ready({ useAccount: { policy: "balanced" } });
+await flow.post.feed({ title: "hello", text: "world" });
 ```
 
 ## API Key Usage
 
-Tavily-style initialization is supported:
+Initialization is supported:
 
 ```ts
 import { mediause } from "@mediause/core";
@@ -102,6 +206,23 @@ Runtime key operations:
 ```ts
 await sdk.setApiKey("mu-NEW_KEY");
 const currentKey = await sdk.getApiKey();
+```
+
+## Advanced CLI Control
+
+Low-level command control is still available when you need direct command routing:
+
+```ts
+const cli = await sdk.createCliExecutor();
+
+await cli.sitesList();
+await cli.executeCore(["auth", "list"]);
+await cli.executeSite({
+  mode: "active-context",
+  capability: "content",
+  action: "publish",
+  args: ["--text", "Hello from MediaUse"],
+});
 ```
 
 ## CLI Binary Bootstrap
@@ -156,6 +277,7 @@ Core command notes:
 
 - docs/CLI_COMMAND_TREE.md
 - docs/ARCHITECTURE.md
+- docs/SDK_USAGE_GUIDE.md
 - docs/SDK_TOOLKIT.md
 - docs/ROADMAP.md
 

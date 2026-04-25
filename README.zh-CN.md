@@ -20,6 +20,15 @@ MediaUse 将网站操作标准化为 CLI + SDK 模型，可供开发者、AI Age
 
 这些能力通过 site plugin 提供。
 
+## 为什么选择 MediaUse
+
+- 原生 Rust CLI，不是 Node.js 包装层，毫秒级启动
+- 可与任意 AI Agent 配合使用（Cursor、Claude Code、Codex、Continue、Windsurf 等）
+- 基于 CDP 驱动 Chrome/Chromium，不依赖 Playwright 或 Puppeteer
+- 支持 OAuth、Webhook、Bridge 模式与自动化模式
+- 内置会话管理、认证密钥库与状态持久化
+- 支持原生 Web APIs
+
 ## MediaUse CLI 与 SDK
 
 MediaUse CLI 是规范执行层。
@@ -62,21 +71,116 @@ const sdk = mediause("mu-YOUR_API_KEY", {
   },
 });
 
-const cli = await sdk.createCliExecutor();
+await sdk.auth.list();
+await sdk.auth.login("weibo");
 
-await cli.sitesList();
-await cli.executeCore(["auth", "list"]);
-await cli.executeSite({
-  mode: "active-context",
-  capability: "content",
-  action: "publish",
-  args: ["--text", "Hello from MediaUse"],
+await sdk.site("weibo").post.feed({
+  title: "Hello from MediaUse",
+  content: "Simple SDK flow",
+  media: ["./cover.jpg"],
 });
+```
+
+## 简化 SDK API
+
+SDK 推荐使用直观的根级链式调用：
+
+```ts
+import { mediause } from "@mediause/core";
+
+const sdk = mediause("mu-YOUR_API_KEY");
+
+await sdk.auth.list();
+await sdk.auth.login("weibo");
+
+await sdk.site("weibo").post.feed({
+  title: "Title",
+  content: "Body",
+  media: ["./a.jpg", "./b.jpg"],
+  draft: true,
+});
+```
+
+所有 CLI-facing 操作都可以通过链式 API 调用：
+
+```ts
+await sdk.auth.list();
+await sdk.auth.login("weibo");
+
+await sdk.registry.list({ json: true });
+await sdk.registry.add("weibo", { json: true });
+
+await sdk.use.account("weibo:main", {
+  policy: "balanced",
+  idleTimeoutSeconds: 120,
+  json: true,
+});
+
+await sdk.manage.context.open(true);
+await sdk.manage.key.get();
+await sdk.manage.key.set("mu-NEW_KEY");
+await sdk.manage.task({ id: "task-id", json: true });
+await sdk.task.status("task-id");
+await sdk.trace.last();
+
+await sdk.help.root(true);
+await sdk.version.get(true);
+await sdk.close.run(true);
+```
+
+动态站点命令支持：
+
+- `sdk.site("<site>").<capability>.<action>(input, payload?)`
+- `sdk.site().<capability>.<action>(input, payload?)`（active context）
+- `sdk.flow("<site>", "<account>").<capability>.<action>(input, payload?)`（flow 简写）
+
+`input` 支持对象、字符串数组或基础类型。
+对象会按确定性规则转换为 CLI 参数：
+
+- camelCase 转 kebab-case flag
+- 数组值转换为重复 flag
+- `true` 转换为仅 flag 开关
+- `false`、`null`、`undefined` 会被忽略
+
+## Flow 约束（对齐 Skill）
+
+对于小红书等场景，推荐顺序是：
+
+1. discover 站点命令
+2. use account 绑定账号上下文
+3. auth health 检查
+4. 执行动态能力
+
+你可以使用内置 flow 强制这个顺序：
+
+```ts
+const flow = sdk.flow("xiaohongshu", "main");
+
+await flow.discover();
+await flow.useAccount({ policy: "balanced" });
+await flow.authHealth();
+
+await flow.search.hot();
+await flow.post.feed({
+  title: "今日推荐",
+  text: "草稿内容",
+  media: ["c:/tmp/a.png"],
+});
+
+await sdk.trace.last();
+```
+
+一键准备方式：
+
+```ts
+const flow = sdk.flow("xiaohongshu", "main");
+await flow.ready({ useAccount: { policy: "balanced" } });
+await flow.post.feed({ title: "hello", text: "world" });
 ```
 
 ## API Key 使用方式
 
-支持 Tavily 风格初始化：
+支持初始化时传入：
 
 ```ts
 import { mediause } from "@mediause/core";
@@ -102,6 +206,23 @@ const sdk = mediause(undefined, {
 ```ts
 await sdk.setApiKey("mu-NEW_KEY");
 const currentKey = await sdk.getApiKey();
+```
+
+## 高级 CLI 控制
+
+如果你需要更底层的命令控制，仍可直接使用 Executor：
+
+```ts
+const cli = await sdk.createCliExecutor();
+
+await cli.sitesList();
+await cli.executeCore(["auth", "list"]);
+await cli.executeSite({
+  mode: "active-context",
+  capability: "content",
+  action: "publish",
+  args: ["--text", "Hello from MediaUse"],
+});
 ```
 
 ## CLI 二进制引导
@@ -156,5 +277,7 @@ Core 命令补充：
 
 - docs/CLI_COMMAND_TREE.md
 - docs/ARCHITECTURE.md
+- docs/SDK_USAGE_GUIDE.md
+- docs/SDK_USAGE_GUIDE.zh-CN.md
 - docs/SDK_TOOLKIT.md
 - docs/ROADMAP.md
