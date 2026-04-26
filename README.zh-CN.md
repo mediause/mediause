@@ -5,7 +5,7 @@
 MediaUse 是一个面向 Web 媒体运营的 AI 基础设施项目。
 官网: https://mediause.dev/
 
-本仓库发布 TypeScript SDK 包 @mediause/core。
+本仓库发布 TypeScript SDK 包 mediause。
 
 ## MediaUse 是什么
 
@@ -50,7 +50,7 @@ MediaUse CLI 是规范执行层。
 ## 安装
 
 ```bash
-npm install @mediause/core
+npm install mediause
 ```
 
 如果你是直接在源码仓库中工作：
@@ -62,7 +62,7 @@ npm install
 ## 快速开始
 
 ```ts
-import { mediause } from "@mediause/core";
+import { mediause } from "mediause";
 
 const sdk = mediause("mu-YOUR_API_KEY");
 
@@ -81,7 +81,7 @@ await sdk.site("weibo").post.feed({
 SDK 推荐使用直观的根级链式调用：
 
 ```ts
-import { mediause } from "@mediause/core";
+import { mediause } from "mediause";
 
 const sdk = mediause("mu-YOUR_API_KEY");
 
@@ -178,7 +178,7 @@ await flow.post.feed({ title: "hello", text: "world" });
 支持初始化时传入：
 
 ```ts
-import { mediause } from "@mediause/core";
+import { mediause } from "mediause";
 
 const sdk = mediause("mu-YOUR_API_KEY", {
   cli: {

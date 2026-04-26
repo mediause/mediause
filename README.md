@@ -5,7 +5,7 @@ Language: [English](README.md) | [中文](README.zh-CN.md)
 MediaUse is an AI infrastructure project for Web media operations.
 Website: https://mediause.dev/
 
-This repository publishes the TypeScript SDK package @mediause/core.
+This repository publishes the TypeScript SDK package mediause.
 
 ## What Is MediaUse
 
@@ -50,7 +50,7 @@ In practice:
 ## Install
 
 ```bash
-npm install @mediause/core
+npm install mediause
 ```
 
 Or, when working directly from source:
@@ -62,7 +62,7 @@ npm install
 ## Quick Start
 
 ```ts
-import { mediause } from "@mediause/core";
+import { mediause } from "mediause";
 
 const sdk = mediause("mu-YOUR_API_KEY");
 
@@ -81,7 +81,7 @@ await sdk.site("weibo").post.feed({
 The SDK provides a direct and readable command style:
 
 ```ts
-import { mediause } from "@mediause/core";
+import { mediause } from "mediause";
 
 const sdk = mediause("mu-YOUR_API_KEY");
 
@@ -178,7 +178,7 @@ await flow.post.feed({ title: "hello", text: "world" });
 Initialization is supported:
 
 ```ts
-import { mediause } from "@mediause/core";
+import { mediause } from "mediause";
 
 const sdk = mediause("mu-YOUR_API_KEY", {
   cli: {
